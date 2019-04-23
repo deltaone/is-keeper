@@ -7,11 +7,34 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using System.Text;
+using System.Collections.Generic;
 
 namespace Core
 {
     public static partial class Tools
     {
+		/// <summary>
+		/// Launch web browser to go to a link.
+		/// </summary>
+		public static void OpenURL(string url)
+		{
+			try
+			{
+				System.Diagnostics.Process.Start(url);
+			}
+			catch
+			{
+				try
+				{
+					System.Diagnostics.Process.Start("IExplore", url);
+				}
+				catch (Exception e)
+				{
+					GM.Log("SpawnLink: " + e.Message);
+				}
+			}
+		}
+ 	
         public static Process GetProcess(string name)
         {
             return (Process.GetProcessesByName(name).FirstOrDefault());
@@ -110,7 +133,7 @@ namespace Core
 			}
 		}
 
-		public static string GetRelativePath(string file, string folder)
+		public static string GetRelativePath(string file, string baseFolder)
 		{   // stackoverflow.com/questions/703281/getting-path-relative-to-the-current-working-directory
 			// stackoverflow.com/questions/275689/how-to-get-relative-path-from-absolute-path/
 			// stackoverflow.com/questions/26053830/exclude-base-directory-and-also-file-name-from-full-path
@@ -118,15 +141,74 @@ namespace Core
 			// stackoverflow.com/questions/4389775/what-is-a-good-way-to-remove-last-few-directory/4389847
 			//string path = file.FullName.ToLower().Replace(pathStorage, "").Trim(Path.DirectorySeparatorChar);
 
-			if(!Path.IsPathRooted(folder)) folder = Path.GetFullPath(folder);
+			if(!Path.IsPathRooted(baseFolder)) baseFolder = Path.GetFullPath(baseFolder);
 
 			Uri pathUri = new Uri(file);
-			if(!folder.EndsWith(Path.DirectorySeparatorChar.ToString())) // Folders must end in a slash
-				folder += Path.DirectorySeparatorChar;
-			Uri folderUri = new Uri(folder);
+			if(!baseFolder.EndsWith(Path.DirectorySeparatorChar.ToString())) // Folders must end in a slash
+				baseFolder += Path.DirectorySeparatorChar;
+			Uri folderUri = new Uri(baseFolder);
 			return Uri.UnescapeDataString(folderUri.MakeRelativeUri(pathUri).ToString().Replace('/', Path.DirectorySeparatorChar));
 		}
 
+		public static List<FileInfo> FilterFiles(List<FileInfo> files, string baseFolder, bool noHidden = true, bool noDotLeaded = true)
+		{
+			List<FileInfo> result = new List<FileInfo>();
+
+			foreach(FileInfo fi in files)
+			{
+				if(noHidden && fi.Attributes.HasFlag(FileAttributes.Hidden))
+					continue;
+
+				if(noDotLeaded)
+				{
+					string relative = GetRelativePath(fi.FullName, baseFolder);
+					string[] parts = relative.Split(Path.DirectorySeparatorChar);
+					foreach(string part in parts)
+						if(part[0] == '.')
+							goto next;
+				}
+				
+				result.Add(fi);
+				next:;
+			}
+
+			return result;
+		}
+
+		public static List<FileInfo> GetFiles(string baseFolder, string pattern, bool noHidden = true, bool noDotLeaded = true, SearchOption options = SearchOption.AllDirectories)
+		{
+			List<FileInfo> files = new List<FileInfo>();
+			List<DirectoryInfo> dirs2scan = new List<DirectoryInfo> { new DirectoryInfo(baseFolder) };
+
+			while(dirs2scan.Count != 0)
+			{
+				int scanIndex = dirs2scan.Count - 1;
+				FileInfo[] filesInfo = dirs2scan[scanIndex].GetFiles(pattern, SearchOption.TopDirectoryOnly);
+
+				foreach(FileInfo fi in filesInfo)
+				{
+					if(noHidden && fi.Attributes.HasFlag(FileAttributes.Hidden))
+						continue;
+					if(noDotLeaded && fi.Name[0] == '.')
+						continue;
+					files.Add(fi);
+				}
+
+				if(options != SearchOption.AllDirectories)
+					break;
+
+				foreach(DirectoryInfo di in dirs2scan[scanIndex].GetDirectories("*", SearchOption.TopDirectoryOnly))
+				{
+					if(noHidden && di.Attributes.HasFlag(FileAttributes.Hidden))
+						continue;
+					if(noDotLeaded && di.Name[0] == '.')
+						continue;
+					dirs2scan.Add(di);
+				}
+				dirs2scan.RemoveAt(scanIndex);
+			}
+			return files;
+		}
 		//---------------------------------------------------------------------
 	}
 }

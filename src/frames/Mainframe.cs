@@ -11,15 +11,6 @@ using System.Threading.Tasks;
 
 namespace Core
 {
-	public class TaskContext
-	{
-		public CancellationTokenSource tokenSource;
-		public CancellationToken token;
-		public Mainframe mainframe;		
-		public Task[] tasks;
-		public bool pause;
-	}
-
 	public partial class Mainframe : Form
 	{
 		private bool _stateClose = false;
@@ -253,5 +244,14 @@ namespace Core
 		}
 		
 		// ----------------------------------------------------------------------------
+	}
+	
+	public class TaskContext
+	{
+		public CancellationTokenSource tokenSource;
+		public CancellationToken token;
+		public Mainframe mainframe;		
+		public Task[] tasks;
+		public bool pause;
 	}
 }

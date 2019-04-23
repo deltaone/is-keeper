@@ -389,19 +389,17 @@ namespace Core
 			List<string> _toIndexPaths = new List<string>();
 			List<string> _toClear = new List<string>();
 
-			FileInfo[] _files;
 			try
 			{
 				DirectoryInfo _di = new DirectoryInfo(pathStorage);
-				_files = _di.GetFiles("*", SearchOption.AllDirectories);
+				_toIndex = _di.GetFiles("*", SearchOption.AllDirectories).ToList();
 			}
 			catch(Exception ex)
 			{
 				GM.Error("Невозможно провести анализ папки-хранилища: " + ex.Message);
-				return(_toIndex);
+				return (_toIndex);
 			}
-			
-			_toIndex = _files.ToList();
+
 			_toIndex.ForEach(item =>
 				_toIndexPaths.Add(item.FullName.Replace(pathStorage, "").Trim(Path.DirectorySeparatorChar).ToLower()));
 
@@ -425,15 +423,7 @@ namespace Core
 				}
 			}
 
-			_toClear.ForEach(_ => _toIndex.Add(new FileInfo(Path.Combine(pathStorage, _))));			
-			//sql.Execute("begin");
-			//_toClear.ForEach(_ =>
-			//{
-			//	GM.Log("Сбрасываем индексацию для: " + _);
-			//	sql.Delete("storage", "path = '" + _ + "'");
-			//	sql.Delete("content", "container = '" + _ + "'");
-			//});
-			//sql.Execute("end");
+			_toClear.ForEach(_ => _toIndex.Add(new FileInfo(Path.Combine(pathStorage, _))));
 
 			_table.Clear();
 			_table.Dispose();
@@ -580,8 +570,9 @@ namespace Core
 		{
 			try
 			{
+				//return (Tools.GetFiles(pathIncome, "*"));
 				DirectoryInfo _di = new DirectoryInfo(pathIncome);
-				return (_di.GetFiles("*", SearchOption.AllDirectories).ToList());
+				return _di.GetFiles("*", SearchOption.AllDirectories).ToList();
 			}
 			catch(Exception ex)
 			{
@@ -612,6 +603,8 @@ namespace Core
 			do
 			{
 				watcherStorage.DeflateDB().ForEach(item => _toIndex.Add(new FileInfo(item)));
+				_toIndex = Tools.FilterFiles(_toIndex, pathStorage);
+
 				if(_toIndex.Count > 0)
 				{
 					sql.Execute("begin");
@@ -649,13 +642,15 @@ namespace Core
 						}
 					});
 					sql.Execute("end");
-					GM.Print("Индексация заняла: " + (TimeSpan.FromMilliseconds(time).TotalSeconds).ToString() + " сек.");
+					GM.Print("Индексация заняла: " + time.Milliseconds().Format());
 					context.mainframe.SetTaskProgress((int)Task.CurrentId, 0, "Ожидание");
 				}
 
 				if(_toIndex.Count == 0 && !context.token.IsCancellationRequested)
 				{					
 					watcherIncome.DeflateDB(true).ForEach(item => _toSort.Add(new FileInfo(item)));
+					_toSort = Tools.FilterFiles(_toSort, pathIncome);
+
 					if(_toSort.Count > 0)
 					{
 						GM.Print("{Maroon}Файлов к сортировке: " + _toSort.Count);
@@ -691,7 +686,7 @@ namespace Core
 								if(context.token.IsCancellationRequested) break;								
 							}
 						});
-						GM.Print("Сортировка заняла: " + (TimeSpan.FromMilliseconds(time).TotalSeconds).ToString() + " сек.");
+						GM.Print("Сортировка заняла: " + time.Milliseconds().Format());
 						context.mainframe.SetTaskProgress((int)Task.CurrentId + 1, 0, "Ожидание");
 					}
 				}

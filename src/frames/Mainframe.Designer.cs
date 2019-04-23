@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+			this.components = new System.ComponentModel.Container();
 			this.cntPause = new System.Windows.Forms.Button();
 			this.cntExit = new System.Windows.Forms.Button();
 			this.cntStatusLine = new System.Windows.Forms.ToolStripStatusLabel();
