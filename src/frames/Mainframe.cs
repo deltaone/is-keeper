@@ -145,6 +145,26 @@ namespace Core
 			this.Activate();
 		}
 
+		private void cntClearIncomeHistory_Click(object sender, EventArgs e)
+		{
+			KeeperCore.ClearIncomeHistory();
+			GM.Print("История поступлений очищена!");
+		}
+
+		private void cntClearDB_Click(object sender, EventArgs e)
+		{
+			DialogResult dialogResult = MessageBox.Show("Уверены ?", "Есть вопрос!", MessageBoxButtons.YesNo);
+			if(dialogResult == DialogResult.Yes)
+			{
+				KeeperCore.ClearDB();
+				GM.Print("{Maroon}База данных полностью очищена!");
+			}
+			else if(dialogResult == DialogResult.No)
+			{
+				//do something else
+			}
+		}
+
 		private void OnPauseCommand(object sender, EventArgs e) // OnPauseCommand
 		{
 			if(_statePause)
@@ -242,10 +262,10 @@ namespace Core
 		{
 			cntStatusStrip.ThreadUI(() => { cntStatusLine.Text = status; });
 		}
-		
+
 		// ----------------------------------------------------------------------------
 	}
-	
+
 	public class TaskContext
 	{
 		public CancellationTokenSource tokenSource;

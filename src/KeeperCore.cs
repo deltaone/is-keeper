@@ -32,6 +32,7 @@ namespace Core
 		public static readonly string pathUpdates = Path.Combine(GM.assemblyFolder, "updates");
 		public static readonly string pathNew = Path.Combine(GM.assemblyFolder, "new");
 		public static readonly string pathDoubles = Path.Combine(GM.assemblyFolder, "doubles");
+		public static readonly string pathDoublesSorted = Path.Combine(pathDoubles, ".sorted");
 		public static readonly string pathRepacked = Path.Combine(GM.assemblyFolder, "repacked");
 
 		public static readonly FolderWatcher watcherStorage;
@@ -39,7 +40,7 @@ namespace Core
 
 		static KeeperCore()
 		{
-			foreach(var item in new string[] { pathStorage, pathIncome, pathCorrupted, pathUpdates, pathNew, pathDoubles, pathRepacked })
+			foreach(var item in new string[] { pathStorage, pathIncome, pathCorrupted, pathUpdates, pathNew, pathDoubles, pathDoublesSorted, pathRepacked })
 				if(!Directory.Exists(item))
 					Directory.CreateDirectory(item);
 
@@ -49,6 +50,7 @@ namespace Core
 			pathUpdates = Path.GetFullPath(pathUpdates).ToLower();
 			pathNew = Path.GetFullPath(pathNew).ToLower();
 			pathDoubles = Path.GetFullPath(pathDoubles).ToLower();
+			pathDoublesSorted = Path.GetFullPath(pathDoublesSorted).ToLower();
 			pathRepacked = Path.GetFullPath(pathRepacked).ToLower();
 
 			watcherStorage = new FolderWatcher(pathStorage);
@@ -75,7 +77,7 @@ namespace Core
 					[crc32] integer NOT NULL
 				);");
 			sql.Execute(@"
-					CREATE TABLE IF NOT EXISTS [dropped] (
+					CREATE TABLE IF NOT EXISTS [sorted] (
 					[id] integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 					[name] text NOT NULL,
 					[size] integer NOT NULL,
@@ -84,7 +86,7 @@ namespace Core
 
 			sql.Execute(@"CREATE INDEX IF NOT EXISTS [storage_idx] ON [storage] ([crc32], [crc32content], [name]);");
 			sql.Execute(@"CREATE INDEX IF NOT EXISTS [content_idx] ON [content] ([crc32]);");
-			sql.Execute(@"CREATE INDEX IF NOT EXISTS [dropped_idx] ON [dropped] ([crc32]);");
+			sql.Execute(@"CREATE INDEX IF NOT EXISTS [sorted_idx] ON [sorted] ([crc32]);");
 		}
 
 		public static void Shutdown()
@@ -92,6 +94,18 @@ namespace Core
 			sql.Dispose();
 			watcherStorage.Dispose();
 			watcherIncome.Dispose();
+		}
+
+		public static void ClearIncomeHistory()
+		{
+			sql.Delete("sorted");
+		}
+
+		public static void ClearDB()
+		{
+			sql.Delete("storage");
+			sql.Delete("content");
+			sql.Delete("sorted");
 		}
 
 		private static void _SafeMoveTo(FileInfo file, string toFolder, string toName = null)
@@ -435,7 +449,7 @@ namespace Core
 
 		#region Sorting
 
-		private static void _SorterProcessFile(FileInfo file, TaskContext context)
+		private static void _SorterProcessFile(FileInfo file, Dictionary<int, string> sorterCache, TaskContext context)
 		{
 			uint crc32, crc32content;
 			List<object[]> content;
@@ -474,6 +488,32 @@ namespace Core
 				return;
 			}
 
+			if(sorterCache.ContainsKey((int)crc32))
+			{
+				GM.Log("SORT", "Повторная сортировка (crc32): " + file.FullName + " => " + sorterCache[(int)crc32]);
+				_SafeMoveTo(file, pathDoublesSorted);
+				return;
+			}
+			else
+				sorterCache.Add((int)crc32, file.Name);
+
+			using(SQLiteDataReader reader = sql.ExecuteReader(string.Format("SELECT name FROM sorted WHERE crc32 = '{0}';", (int)crc32)))
+				if(reader.HasRows)
+				{
+					while(reader.Read())
+						GM.Log("SORT", "Повторная сортировка (crc32): " + file.FullName + " => " + reader[0]);
+					_SafeMoveTo(file, pathDoublesSorted);
+					return;
+				}
+				else
+				{
+					sql.Insert("sorted", new Dictionary<string, object> {
+						{"name", file.Name},
+						{"size", file.Length},
+						{"crc32", crc32},
+					});
+				}
+
 			string[] archiveExtensions = { ".zip", ".7z" }; // (stringArray.All(s => stringToCheck.Contains(s)))
 			if(archiveExtensions.Any(Path.GetExtension(file.Name).ToLower().Contains)) // (stringArray.Any(s => stringToCheck.Contains(s)))
 			{
@@ -501,7 +541,7 @@ namespace Core
 				return;
 			}
 
-			result = (long) sql.ExecuteScalar(
+			result = (long)sql.ExecuteScalar(
 				string.Format("SELECT COUNT(*) FROM storage WHERE crc32content = '{0}';", (int)crc32content));
 			if(result > 0)
 			{
@@ -600,6 +640,8 @@ namespace Core
 			List<FileInfo> _toIndex = _IndexerFilesToIndex();
 			List<FileInfo> _toSort = _SorterFilesToSort();
 
+			Dictionary<int, string> _sorterCache = new Dictionary<int, string>();
+
 			do
 			{
 				watcherStorage.DeflateDB().ForEach(item => _toIndex.Add(new FileInfo(item)));
@@ -653,6 +695,9 @@ namespace Core
 
 					if(_toSort.Count > 0)
 					{
+						sql.Execute("begin");
+						_sorterCache.Clear();
+
 						GM.Print("{Maroon}Файлов к сортировке: " + _toSort.Count);
 						var time = Tools.MeasureAction(() =>
 						{
@@ -660,7 +705,12 @@ namespace Core
 							int _oldPercent = 100;
 							for(int i = _toSort.Count - 1; i >= 0; i--)
 							{
-								// GM.Log("SORT", _toSort[i].FullName);
+								//GM.Log("SORT", _toSort[i].FullName);
+								//if(i % 100 == 0)
+								//{
+								//	sql.Execute("end");
+								//	sql.Execute("begin");
+								//}
 
 								int percent = ((_total - i) * 100 / _total);
 								if(_oldPercent != percent)
@@ -674,7 +724,7 @@ namespace Core
 										GM.Log("SORT", "Файл заблокирован сторонней программой: " + _toSort[i].FullName);
 									else
 									{
-										_SorterProcessFile(_toSort[i], context);
+										_SorterProcessFile(_toSort[i], _sorterCache, context);
 										_toSort.RemoveAt(i);
 									}
 								}
@@ -686,6 +736,7 @@ namespace Core
 								if(context.token.IsCancellationRequested) break;								
 							}
 						});
+						sql.Execute("end");
 						GM.Print("Сортировка заняла: " + time.Milliseconds().Format());
 						context.mainframe.SetTaskProgress((int)Task.CurrentId + 1, 0, "Ожидание");
 					}

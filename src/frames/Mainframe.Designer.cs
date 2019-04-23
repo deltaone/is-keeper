@@ -28,21 +28,22 @@
         /// </summary>
         private void InitializeComponent()
         {
-			this.components = new System.ComponentModel.Container();
 			this.cntPause = new System.Windows.Forms.Button();
 			this.cntExit = new System.Windows.Forms.Button();
 			this.cntStatusLine = new System.Windows.Forms.ToolStripStatusLabel();
 			this.cntStatusStrip = new System.Windows.Forms.StatusStrip();
 			this.cntTaskGrid = new System.Windows.Forms.DataGridView();
-			this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this.dataGridViewProgressColumn1 = new Core.DataGridViewProgressColumn();
-			this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-			this.cntMessageLog = new ControlsEx.RichTextLog();
 			this.TaskID = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this.Note = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this.TaskProgress = new Core.DataGridViewProgressColumn();
 			this.TaskStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
 			this.RootID = new System.Windows.Forms.DataGridViewTextBoxColumn();
+			this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+			this.dataGridViewProgressColumn1 = new Core.DataGridViewProgressColumn();
+			this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+			this.cntMessageLog = new ControlsEx.RichTextLog();
+			this.cntClearIncomeHistory = new System.Windows.Forms.Button();
+			this.cntClearDB = new System.Windows.Forms.Button();
 			this.cntStatusStrip.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.cntTaskGrid)).BeginInit();
 			this.SuspendLayout();
@@ -50,9 +51,9 @@
 			// cntPause
 			// 
 			this.cntPause.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-			this.cntPause.Location = new System.Drawing.Point(797, 113);
+			this.cntPause.Location = new System.Drawing.Point(786, 113);
 			this.cntPause.Name = "cntPause";
-			this.cntPause.Size = new System.Drawing.Size(109, 23);
+			this.cntPause.Size = new System.Drawing.Size(145, 23);
 			this.cntPause.TabIndex = 2;
 			this.cntPause.Text = "Пауза";
 			this.cntPause.UseVisualStyleBackColor = true;
@@ -61,9 +62,9 @@
 			// cntExit
 			// 
 			this.cntExit.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-			this.cntExit.Location = new System.Drawing.Point(797, 142);
+			this.cntExit.Location = new System.Drawing.Point(786, 142);
 			this.cntExit.Name = "cntExit";
-			this.cntExit.Size = new System.Drawing.Size(109, 23);
+			this.cntExit.Size = new System.Drawing.Size(145, 23);
 			this.cntExit.TabIndex = 3;
 			this.cntExit.Text = "Выход";
 			this.cntExit.UseVisualStyleBackColor = true;
@@ -83,7 +84,7 @@
             this.cntStatusLine});
 			this.cntStatusStrip.Location = new System.Drawing.Point(0, 362);
 			this.cntStatusStrip.Name = "cntStatusStrip";
-			this.cntStatusStrip.Size = new System.Drawing.Size(918, 22);
+			this.cntStatusStrip.Size = new System.Drawing.Size(943, 22);
 			this.cntStatusStrip.SizingGrip = false;
 			this.cntStatusStrip.TabIndex = 1;
 			this.cntStatusStrip.Text = "statusStrip";
@@ -106,43 +107,6 @@
 			this.cntTaskGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
 			this.cntTaskGrid.Size = new System.Drawing.Size(776, 177);
 			this.cntTaskGrid.TabIndex = 4;
-			// 
-			// dataGridViewTextBoxColumn1
-			// 
-			this.dataGridViewTextBoxColumn1.DataPropertyName = "TaskID";
-			this.dataGridViewTextBoxColumn1.HeaderText = "ID";
-			this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
-			// 
-			// dataGridViewProgressColumn1
-			// 
-			this.dataGridViewProgressColumn1.DataPropertyName = "TaskProgress";
-			this.dataGridViewProgressColumn1.HeaderText = "Progress";
-			this.dataGridViewProgressColumn1.Name = "dataGridViewProgressColumn1";
-			this.dataGridViewProgressColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-			this.dataGridViewProgressColumn1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-			// 
-			// dataGridViewTextBoxColumn2
-			// 
-			this.dataGridViewTextBoxColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-			this.dataGridViewTextBoxColumn2.DataPropertyName = "TaskStatus";
-			this.dataGridViewTextBoxColumn2.HeaderText = "Status";
-			this.dataGridViewTextBoxColumn2.MinimumWidth = 200;
-			this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
-			// 
-			// cntMessageLog
-			// 
-			this.cntMessageLog.BackColor = System.Drawing.SystemColors.ControlLight;
-			this.cntMessageLog.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-			this.cntMessageLog.Font = new System.Drawing.Font("Consolas", 9F);
-			this.cntMessageLog.ForeColor = System.Drawing.Color.Blue;
-			this.cntMessageLog.Location = new System.Drawing.Point(0, 183);
-			this.cntMessageLog.LogMaxLines = 150;
-			this.cntMessageLog.Name = "cntMessageLog";
-			this.cntMessageLog.ReadOnly = true;
-			this.cntMessageLog.Size = new System.Drawing.Size(918, 174);
-			this.cntMessageLog.TabIndex = 0;
-			this.cntMessageLog.TabStop = false;
-			this.cntMessageLog.Text = "";
 			// 
 			// TaskID
 			// 
@@ -184,11 +148,73 @@
 			this.RootID.Name = "RootID";
 			this.RootID.ReadOnly = true;
 			// 
+			// dataGridViewTextBoxColumn1
+			// 
+			this.dataGridViewTextBoxColumn1.DataPropertyName = "TaskID";
+			this.dataGridViewTextBoxColumn1.HeaderText = "ID";
+			this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+			// 
+			// dataGridViewProgressColumn1
+			// 
+			this.dataGridViewProgressColumn1.DataPropertyName = "TaskProgress";
+			this.dataGridViewProgressColumn1.HeaderText = "Progress";
+			this.dataGridViewProgressColumn1.Name = "dataGridViewProgressColumn1";
+			this.dataGridViewProgressColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+			this.dataGridViewProgressColumn1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+			// 
+			// dataGridViewTextBoxColumn2
+			// 
+			this.dataGridViewTextBoxColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+			this.dataGridViewTextBoxColumn2.DataPropertyName = "TaskStatus";
+			this.dataGridViewTextBoxColumn2.HeaderText = "Status";
+			this.dataGridViewTextBoxColumn2.MinimumWidth = 200;
+			this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
+			// 
+			// cntMessageLog
+			// 
+			this.cntMessageLog.BackColor = System.Drawing.SystemColors.ControlLight;
+			this.cntMessageLog.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+			this.cntMessageLog.Font = new System.Drawing.Font("Consolas", 9F);
+			this.cntMessageLog.ForeColor = System.Drawing.Color.Blue;
+			this.cntMessageLog.Location = new System.Drawing.Point(0, 183);
+			this.cntMessageLog.LogMaxLines = 150;
+			this.cntMessageLog.Name = "cntMessageLog";
+			this.cntMessageLog.ReadOnly = true;
+			this.cntMessageLog.Size = new System.Drawing.Size(942, 174);
+			this.cntMessageLog.TabIndex = 0;
+			this.cntMessageLog.TabStop = false;
+			this.cntMessageLog.Text = "";
+			// 
+			// cntClearIncomeHistory
+			// 
+			this.cntClearIncomeHistory.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+			this.cntClearIncomeHistory.Location = new System.Drawing.Point(786, 12);
+			this.cntClearIncomeHistory.Name = "cntClearIncomeHistory";
+			this.cntClearIncomeHistory.Size = new System.Drawing.Size(145, 41);
+			this.cntClearIncomeHistory.TabIndex = 5;
+			this.cntClearIncomeHistory.Text = "Удалить историю поступлений";
+			this.cntClearIncomeHistory.UseVisualStyleBackColor = true;
+			this.cntClearIncomeHistory.Click += new System.EventHandler(this.cntClearIncomeHistory_Click);
+			// 
+			// cntClearDB
+			// 
+			this.cntClearDB.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+			this.cntClearDB.ForeColor = System.Drawing.Color.OrangeRed;
+			this.cntClearDB.Location = new System.Drawing.Point(786, 69);
+			this.cntClearDB.Name = "cntClearDB";
+			this.cntClearDB.Size = new System.Drawing.Size(145, 23);
+			this.cntClearDB.TabIndex = 6;
+			this.cntClearDB.Text = "Очистить БД";
+			this.cntClearDB.UseVisualStyleBackColor = true;
+			this.cntClearDB.Click += new System.EventHandler(this.cntClearDB_Click);
+			// 
 			// Mainframe
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(918, 384);
+			this.ClientSize = new System.Drawing.Size(943, 384);
+			this.Controls.Add(this.cntClearDB);
+			this.Controls.Add(this.cntClearIncomeHistory);
 			this.Controls.Add(this.cntTaskGrid);
 			this.Controls.Add(this.cntExit);
 			this.Controls.Add(this.cntPause);
@@ -224,5 +250,7 @@
 		private DataGridViewProgressColumn TaskProgress;
 		private System.Windows.Forms.DataGridViewTextBoxColumn TaskStatus;
 		private System.Windows.Forms.DataGridViewTextBoxColumn RootID;
+		private System.Windows.Forms.Button cntClearIncomeHistory;
+		private System.Windows.Forms.Button cntClearDB;
 	}
 }
